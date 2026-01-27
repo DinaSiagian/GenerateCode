@@ -43,4 +43,11 @@ class ItemController extends Controller {
         Item::destroy($id);
         return response()->json(['message' => 'Berhasil dihapus']);
     }
+
+    // Mencari detail barang berdasarkan kode_barang untuk fitur scan
+public function showByCode($kode_barang) {
+    $item = Item::where('kode_barang', $kode_barang)->first();
+    if (!$item) return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+    return response()->json($item);
+}
 }

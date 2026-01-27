@@ -12,4 +12,5 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('/items', 'ItemController@store');
     $router->put('/items/{id}', 'ItemController@update');
     $router->delete('/items/{id}', 'ItemController@destroy');
+    $router->get('/items/detail/{kode_barang}', 'ItemController@showByCode');
 });
