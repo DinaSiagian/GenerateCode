@@ -4,5 +4,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model {
     protected $table = 'items';
-    protected $fillable = ['nama_barang', 'kode_barang', 'kategori', 'status'];
+    protected $fillable = ['nama_barang', 'kode_barang', 'kategori', 'lokasi', 'status'];
 }
