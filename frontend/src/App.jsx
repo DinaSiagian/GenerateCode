@@ -1,60 +1,75 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Container, Row, Col, Nav, Navbar, Card, Button } from 'react-bootstrap';
-import { LayoutDashboard, Package, PlusCircle, LogOut, Bell } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Box, PlusCircle, LogOut } from 'lucide-react';
 
-// Import Halaman
+// Import Halaman - Pastikan penamaannya sesuai dengan file di folder src/pages/
+import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
-import AddItem from './pages/AddItem';
+import AddItem from './pages/AddItem'; // SEKARANG SUDAH SESUAI
 
-const DashboardOverview = () => (
-  <div className="py-4">
-    <h2 className="fw-bold mb-4">Ringkasan Sistem Inventaris</h2>
-    <Row className="g-4">
-      <Col md={4}><Card className="shadow-sm border-0 border-start border-primary border-5 p-3"><Card.Body><h6 className="text-muted fw-bold">TOTAL BARANG</h6><h2 className="fw-bold">142</h2></Card.Body></Card></Col>
-      <Col md={4}><Card className="shadow-sm border-0 border-start border-warning border-5 p-3"><Card.Body><h6 className="text-muted fw-bold">TERTUNDA</h6><h2 className="fw-bold text-warning">12</h2></Card.Body></Card></Col>
-      <Col md={4}><Card className="shadow-sm border-0 border-start border-danger border-5 p-3"><Card.Body><h6 className="text-muted fw-bold">DIKEMBALIKAN</h6><h2 className="fw-bold text-danger">5</h2></Card.Body></Card></Col>
-    </Row>
-  </div>
-);
+const Sidebar = () => {
+  const location = useLocation();
+
+  const menuItems = [
+    { path: '/', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { path: '/inventory', name: 'Inventaris', icon: <Box size={20} /> },
+    { path: '/tambah', name: 'Tambah Barang', icon: <PlusCircle size={20} /> },
+  ];
+
+  return (
+    <div className="sidebar bg-dark text-white vh-100 p-3 shadow" style={{ width: '260px', position: 'fixed' }}>
+      <h4 className="fw-bold text-primary mb-5 px-2">GENCODE ADMIN</h4>
+      
+      <nav className="nav flex-column gap-2">
+        {menuItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`nav-link d-flex align-items-center gap-3 rounded px-3 py-2 transition-all ${
+              location.pathname === item.path ? 'bg-primary text-white shadow' : 'text-light opacity-75 hover-opacity-100'
+            }`}
+            style={{ textDecoration: 'none' }}
+          >
+            {item.icon}
+            <span>{item.name}</span>
+          </Link>
+        ))}
+      </nav>
+
+      <div className="mt-auto pt-5 border-top border-secondary mx-2" style={{ position: 'absolute', bottom: '20px', width: '220px' }}>
+        <Link to="/logout" className="nav-link text-danger d-flex align-items-center gap-3">
+          <LogOut size={20} />
+          <span>Keluar</span>
+        </Link>
+      </div>
+    </div>
+  );
+};
 
 function App() {
   return (
     <Router>
-      <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
-        {/* SIDEBAR */}
-        <div className="bg-dark text-white p-4 sticky-top shadow" style={{ width: '280px', height: '100vh' }}>
-          <h4 className="fw-black mb-5 text-primary tracking-tighter">GENCODE ADMIN</h4>
-          <Nav className="flex-column gap-2">
-            <Nav.Link as={NavLink} to="/" end className="text-white d-flex align-items-center gap-3 p-3 rounded shadow-sm">
-              <LayoutDashboard size={20} /> Dashboard
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/inventory" className="text-white d-flex align-items-center gap-3 p-3 rounded">
-              <Package size={20} /> Inventaris
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/tambah" className="text-white d-flex align-items-center gap-3 p-3 rounded">
-              <PlusCircle size={20} /> Tambah Barang
-            </Nav.Link>
-            <hr className="my-5 border-secondary" />
-            <Button variant="link" className="text-danger d-flex align-items-center gap-3 p-0 text-decoration-none">
-              <LogOut size={20} /> Keluar
-            </Button>
-          </Nav>
-        </div>
+      <div className="d-flex bg-light min-vh-100">
+        <Sidebar />
 
-        {/* MAIN CONTENT */}
-        <div className="flex-grow-1 overflow-auto">
-          <Navbar bg="white" className="shadow-sm px-4 py-3 sticky-top">
-            <Navbar.Brand className="text-muted fs-6">Super Admin Dashboard</Navbar.Brand>
-            <Nav className="ms-auto"><Bell size={20} className="text-muted mt-1" /></Nav>
-          </Navbar>
-          <Container fluid className="p-4">
+        <div className="flex-grow-1" style={{ marginLeft: '260px' }}>
+          <header className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center shadow-sm">
+            <span className="text-muted fw-medium">Super Admin Dashboard</span>
+            <div className="rounded-circle bg-light p-2 shadow-sm">🔔</div>
+          </header>
+
+          <main className="p-4">
             <Routes>
-              <Route path="/" element={<DashboardOverview />} />
+              {/* Route Dashboard mengambil data statistik dari MySQL */}
+              <Route path="/" element={<Dashboard />} />
+              
+              {/* Route Inventaris untuk CRUD */}
               <Route path="/inventory" element={<Inventory />} />
+              
+              {/* Route Tambah Barang menggunakan komponen AddItem */}
               <Route path="/tambah" element={<AddItem />} />
             </Routes>
-          </Container>
+          </main>
         </div>
       </div>
     </Router>

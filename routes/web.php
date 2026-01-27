@@ -6,15 +6,10 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-// WAJIB ADA GRUP PREFIX 'api'
 $router->group(['prefix' => 'api'], function () use ($router) {
-    
-    // Alamat: localhost:8000/api/items
     $router->get('/items', 'ItemController@index');
-    
-    // Alamat: localhost:8000/api/items (POST)
+    $router->get('/dashboard-stats', 'ItemController@getStats');
     $router->post('/items', 'ItemController@store');
-    
-    // Alamat untuk hapus: localhost:8000/api/items/{id}
+    $router->put('/items/{id}', 'ItemController@update');
     $router->delete('/items/{id}', 'ItemController@destroy');
 });
