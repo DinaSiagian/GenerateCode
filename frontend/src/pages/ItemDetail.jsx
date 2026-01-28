@@ -1,27 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Badge, Spinner, Container } from "react-bootstrap";
-import { MapPin, Tag, Package, Info } from "lucide-react";
+import { Card, Badge, Spinner, Container, Button } from "react-bootstrap";
+import { MapPin, Tag, Package, Info, HandHelping } from "lucide-react"; // Perbaikan: HandHelping tanpa spasi
 import api from "../api";
 
 const ItemDetail = () => {
     const { kode_barang } = useParams();
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [borrowing, setBorrowing] = useState(false); // State untuk proses klik tombol
+
+    const fetchDetail = async () => {
+        try {
+            const res = await api.get(`/items/detail/${kode_barang}`);
+            setItem(res.data);
+        } catch (err) {
+            console.error("Data tidak ditemukan");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchDetail = async () => {
-            try {
-                const res = await api.get(`/items/detail/${kode_barang}`);
-                setItem(res.data);
-            } catch (err) {
-                console.error("Data tidak ditemukan");
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchDetail();
     }, [kode_barang]);
+
+    // Fungsi untuk menangani peminjaman barang
+    const handleBorrow = async () => {
+        if (
+            !window.confirm(
+                `Apakah Anda yakin ingin meminjam ${item.nama_barang}?`,
+            )
+        )
+            return;
+
+        setBorrowing(true);
+        try {
+            // Mengirim permintaan ke backend untuk update status dan jumlah
+            // Pastikan backend Anda memiliki endpoint PUT /items/borrow/{kode_barang}
+            await api.put(`/items/borrow/${item.kode_barang}`);
+
+            alert(
+                "Berhasil meminjam barang! Status admin otomatis diperbarui.",
+            );
+
+            // Segarkan data untuk melihat perubahan status terbaru
+            fetchDetail();
+        } catch (err) {
+            alert(
+                err.response?.data?.message ||
+                    "Gagal melakukan peminjaman barang. Pastikan endpoint tersedia.",
+            );
+        } finally {
+            setBorrowing(false);
+        }
+    };
 
     if (loading)
         return (
@@ -61,7 +94,9 @@ const ItemDetail = () => {
                                 bg={
                                     item.status === "Tersedia"
                                         ? "success"
-                                        : "warning"
+                                        : item.status === "Dipinjam"
+                                          ? "primary"
+                                          : "warning"
                                 }
                                 className="px-3 py-2 rounded-pill"
                             >
@@ -92,6 +127,39 @@ const ItemDetail = () => {
                                 </span>
                             </div>
                         </div>
+
+                        {/* Penambahan Tombol Pinjam: Hanya muncul jika statusnya "Tersedia" */}
+                        {item.status === "Tersedia" && (
+                            <div className="mt-4">
+                                <Button
+                                    variant="primary"
+                                    className="w-100 py-3 rounded-3 fw-bold d-flex align-items-center justify-content-center"
+                                    onClick={handleBorrow}
+                                    disabled={borrowing}
+                                >
+                                    {borrowing ? (
+                                        <Spinner
+                                            animation="sm"
+                                            size="sm"
+                                            className="me-2"
+                                        />
+                                    ) : (
+                                        <HandHelping
+                                            className="me-2"
+                                            size={20}
+                                        />
+                                    )}
+                                    PINJAM BARANG
+                                </Button>
+                                <p
+                                    className="text-center text-muted tiny mt-2"
+                                    style={{ fontSize: "0.75rem" }}
+                                >
+                                    *Peminjaman akan mengurangi jumlah tersedia
+                                    di database.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="mt-4 text-center">
                             <p className="text-muted small mb-0">
