@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Card, Badge, Spinner, Button } from "react-bootstrap";
-import { ArrowLeft, MapPin, Tag, Package, Info } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Card, Badge, Spinner, Container } from "react-bootstrap";
+import { MapPin, Tag, Package, Info } from "lucide-react";
 import api from "../api";
 
 const ItemDetail = () => {
-    const { kode_barang } = useParams(); // Ambil kode dari URL
+    const { kode_barang } = useParams();
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -15,7 +15,7 @@ const ItemDetail = () => {
                 const res = await api.get(`/items/detail/${kode_barang}`);
                 setItem(res.data);
             } catch (err) {
-                console.error("Barang tidak ditemukan");
+                console.error("Data tidak ditemukan");
             } finally {
                 setLoading(false);
             }
@@ -25,96 +25,86 @@ const ItemDetail = () => {
 
     if (loading)
         return (
-            <div className="text-center mt-5">
-                <Spinner animation="border" />
+            <div className="vh-100 d-flex justify-content-center align-items-center">
+                <Spinner animation="border" variant="primary" />
             </div>
         );
 
     if (!item)
         return (
-            <div className="text-center mt-5">
-                <h4>⚠️ Barang Tidak Ditemukan</h4>
-                <Link to="/inventory">
-                    <Button variant="primary">Kembali ke Inventaris</Button>
-                </Link>
+            <div className="vh-100 d-flex justify-content-center align-items-center">
+                <h4>Data Aset Tidak Ditemukan</h4>
             </div>
         );
 
     return (
-        <div className="p-4 d-flex justify-content-center">
-            <Card
-                className="shadow-lg border-0"
-                style={{ maxWidth: "600px", width: "100%" }}
-            >
-                <Card.Header className="bg-primary text-white p-4">
-                    <div className="d-flex justify-content-between align-items-center">
-                        <h4 className="m-0 fw-bold">Detail Informasi Aset</h4>
-                        <Badge bg="light" text="dark">
+        <div className="bg-primary vh-100 d-flex align-items-center">
+            <Container className="d-flex justify-content-center">
+                <Card
+                    className="shadow-lg border-0 rounded-4 overflow-hidden"
+                    style={{ maxWidth: "500px", width: "90%" }}
+                >
+                    <div className="bg-dark p-4 text-center">
+                        <h5 className="text-primary fw-bold mb-0">
+                            INFORMASI ASET
+                        </h5>
+                        <small className="text-white-50">
                             {item.kode_barang}
-                        </Badge>
+                        </small>
                     </div>
-                </Card.Header>
-                <Card.Body className="p-4">
-                    <div className="mb-4 text-center">
-                        <div className="display-6 fw-bold text-dark mb-2">
-                            {item.nama_barang}
+                    <Card.Body className="p-4 bg-white">
+                        <div className="text-center mb-4">
+                            <h2 className="fw-bold text-dark mb-1">
+                                {item.nama_barang}
+                            </h2>
+                            <Badge
+                                bg={
+                                    item.status === "Tersedia"
+                                        ? "success"
+                                        : "warning"
+                                }
+                                className="px-3 py-2 rounded-pill"
+                            >
+                                {item.status}
+                            </Badge>
                         </div>
-                        <Badge
-                            bg={
-                                item.status === "Tersedia"
-                                    ? "success"
-                                    : "warning"
-                            }
-                            className="px-3 py-2"
-                        >
-                            Status: {item.status}
-                        </Badge>
-                    </div>
 
-                    <div className="d-flex align-items-center mb-3 p-3 bg-light rounded">
-                        <Tag className="me-3 text-primary" />
-                        <div>
-                            <small className="text-muted d-block">
-                                Kategori
-                            </small>
-                            <span className="fw-bold">{item.kategori}</span>
+                        <div className="d-flex align-items-center mb-3 p-3 border rounded-3">
+                            <Tag className="text-primary me-3" size={24} />
+                            <div>
+                                <label className="text-muted small d-block">
+                                    Kategori
+                                </label>
+                                <span className="fw-bold text-dark">
+                                    {item.kategori}
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="d-flex align-items-center mb-3 p-3 bg-light rounded">
-                        <MapPin className="me-3 text-danger" />
-                        <div>
-                            <small className="text-muted d-block">
-                                Lokasi Penempatan
-                            </small>
-                            <span className="fw-bold">{item.lokasi}</span>
+                        <div className="d-flex align-items-center mb-3 p-3 border rounded-3">
+                            <MapPin className="text-danger me-3" size={24} />
+                            <div>
+                                <label className="text-muted small d-block">
+                                    Lokasi Penempatan
+                                </label>
+                                <span className="fw-bold text-dark">
+                                    {item.lokasi}
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="d-flex align-items-center mb-4 p-3 bg-light rounded">
-                        <Info className="me-3 text-info" />
-                        <div>
-                            <small className="text-muted d-block">
-                                Terakhir Update
-                            </small>
-                            <span className="fw-bold">
-                                {new Date(item.updated_at).toLocaleString(
-                                    "id-ID",
-                                )}
-                            </span>
+                        <div className="mt-4 text-center">
+                            <p className="text-muted small mb-0">
+                                Scan date:{" "}
+                                {new Date().toLocaleDateString("id-ID")}
+                            </p>
+                            <p className="fw-bold text-primary small">
+                                GENCODE - PT PELINDO
+                            </p>
                         </div>
-                    </div>
-
-                    <Link to="/inventory">
-                        <Button
-                            variant="outline-secondary"
-                            className="w-100 d-flex align-items-center justify-content-center gap-2"
-                        >
-                            <ArrowLeft size={18} /> Kembali ke Daftar
-                        </Button>
-                    </Link>
-                </Card.Body>
-            </Card>
+                    </Card.Body>
+                </Card>
+            </Container>
         </div>
     );
 };

@@ -8,14 +8,19 @@ import {
 } from "react-router-dom";
 import { LayoutDashboard, Box, PlusCircle, LogOut } from "lucide-react";
 
-// Import Halaman - Pastikan penamaannya sesuai dengan file di folder src/pages/
+// Import Halaman
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import AddItem from "./pages/AddItem";
-import ItemDetail from "./pages/ItemDetail"; // PENAMBAHAN: Import halaman detail
+import ItemDetail from "./pages/ItemDetail";
 
 const Sidebar = () => {
     const location = useLocation();
+
+    // LOGIKA BARU: Jika path dimulai dengan "/item/", jangan tampilkan Sidebar
+    if (location.pathname.startsWith("/item/")) {
+        return null;
+    }
 
     const menuItems = [
         { path: "/", name: "Dashboard", icon: <LayoutDashboard size={20} /> },
@@ -33,7 +38,6 @@ const Sidebar = () => {
             style={{ width: "260px", position: "fixed" }}
         >
             <h4 className="fw-bold text-primary mb-5 px-2">GENCODE ADMIN</h4>
-
             <nav className="nav flex-column gap-2">
                 {menuItems.map((item) => (
                     <Link
@@ -51,7 +55,6 @@ const Sidebar = () => {
                     </Link>
                 ))}
             </nav>
-
             <div
                 className="mt-auto pt-5 border-top border-secondary mx-2"
                 style={{ position: "absolute", bottom: "20px", width: "220px" }}
@@ -68,41 +71,48 @@ const Sidebar = () => {
     );
 };
 
+// Komponen Pembungkus Konten untuk mengatur margin otomatis
+const MainLayout = ({ children }) => {
+    const location = useLocation();
+    // Jika halaman detail barang, jangan beri margin kiri (karena sidebar hilang)
+    const isPublic = location.pathname.startsWith("/item/");
+
+    return (
+        <div
+            className="flex-grow-1"
+            style={{ marginLeft: isPublic ? "0" : "260px" }}
+        >
+            {!isPublic && (
+                <header className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center shadow-sm">
+                    <span className="text-muted fw-medium">
+                        Super Admin Dashboard
+                    </span>
+                    <div className="rounded-circle bg-light p-2 shadow-sm">
+                        🔔
+                    </div>
+                </header>
+            )}
+            <main className={isPublic ? "p-0" : "p-4"}>{children}</main>
+        </div>
+    );
+};
+
 function App() {
     return (
         <Router>
             <div className="d-flex bg-light min-vh-100">
                 <Sidebar />
-
-                <div className="flex-grow-1" style={{ marginLeft: "260px" }}>
-                    <header className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center shadow-sm">
-                        <span className="text-muted fw-medium">
-                            Super Admin Dashboard
-                        </span>
-                        <div className="rounded-circle bg-light p-2 shadow-sm">
-                            🔔
-                        </div>
-                    </header>
-
-                    <main className="p-4">
-                        <Routes>
-                            {/* Route Dashboard mengambil data statistik dari MySQL */}
-                            <Route path="/" element={<Dashboard />} />
-
-                            {/* Route Inventaris untuk CRUD */}
-                            <Route path="/inventory" element={<Inventory />} />
-
-                            {/* Route Tambah Barang menggunakan komponen AddItem */}
-                            <Route path="/tambah" element={<AddItem />} />
-
-                            {/* PENAMBAHAN: Route untuk melihat detail barang berdasarkan kode saat QR di-scan */}
-                            <Route
-                                path="/item/:kode_barang"
-                                element={<ItemDetail />}
-                            />
-                        </Routes>
-                    </main>
-                </div>
+                <MainLayout>
+                    <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/inventory" element={<Inventory />} />
+                        <Route path="/tambah" element={<AddItem />} />
+                        <Route
+                            path="/item/:kode_barang"
+                            element={<ItemDetail />}
+                        />
+                    </Routes>
+                </MainLayout>
             </div>
         </Router>
     );
