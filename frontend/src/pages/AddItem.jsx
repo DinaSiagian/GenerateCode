@@ -25,7 +25,6 @@ const AddItem = () => {
     ];
 
     // Data Pilihan Lokasi (8 Lantai x 4 Divisi)
-    // Data Pilihan Lokasi (8 Lantai x 4 Divisi)
     const floors = [1, 2, 3, 4, 5, 6, 7, 8];
 
     const divisionsByFloor = {
