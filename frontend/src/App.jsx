@@ -1,4 +1,5 @@
 import React from 'react';
+<<<<<<< Updated upstream
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { Container, Row, Col, Nav, Navbar, Card, Button } from 'react-bootstrap';
 import { LayoutDashboard, Package, PlusCircle, LogOut, Bell } from 'lucide-react';
@@ -17,10 +18,40 @@ const DashboardOverview = () => (
     </Row>
   </div>
 );
+=======
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Box, PlusCircle } from 'lucide-react';
+import Dashboard from './pages/Dashboard';
+import Inventory from './pages/Inventory';
+import AddItem from './pages/AddItem';
+import ScanResult from './pages/ScanResult';
 
-function App() {
+const Sidebar = () => {
+  const location = useLocation();
+  const menus = [
+    { path: '/', name: 'Dashboard', icon: <LayoutDashboard size={20}/> },
+    { path: '/inventory', name: 'Inventaris', icon: <Box size={20}/> },
+    { path: '/tambah', name: 'Tambah Barang', icon: <PlusCircle size={20}/> },
+  ];
+  return (
+    <div className="bg-dark text-white vh-100 p-3 shadow" style={{ width: '260px', position: 'fixed' }}>
+      <h4 className="fw-bold text-primary mb-5 px-2">GENCODE ADMIN</h4>
+      <nav className="nav flex-column gap-2">
+        {menus.map(m => (
+          <Link key={m.path} to={m.path} className={`nav-link d-flex align-items-center gap-3 rounded px-3 py-2 ${location.pathname === m.path ? 'bg-primary text-white shadow' : 'text-light opacity-75'}`} style={{ textDecoration: 'none' }}>
+            {m.icon} <span>{m.name}</span>
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
+};
+>>>>>>> Stashed changes
+
+export default function App() {
   return (
     <Router>
+<<<<<<< Updated upstream
       <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
         {/* SIDEBAR */}
         <div className="bg-dark text-white p-4 sticky-top shadow" style={{ width: '280px', height: '100vh' }}>
@@ -51,8 +82,18 @@ function App() {
           <Container fluid className="p-4">
             <Routes>
               <Route path="/" element={<DashboardOverview />} />
+=======
+      <div className="d-flex bg-light min-vh-100">
+        <Sidebar />
+        <div className="flex-grow-1" style={{ marginLeft: '260px' }}>
+          <header className="bg-white border-bottom px-4 py-3 shadow-sm">Super Admin Dashboard</header>
+          <main className="p-4">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+>>>>>>> Stashed changes
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/tambah" element={<AddItem />} />
+              <Route path="/scan/:kode_barang" element={<ScanResult />} />
             </Routes>
           </Container>
         </div>
@@ -60,5 +101,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;
