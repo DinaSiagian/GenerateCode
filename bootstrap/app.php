@@ -54,7 +54,7 @@ $app->configure('app');
 
 $app->middleware([
     // MENDAFTARKAN CORS MIDDLEWARE
-    App\Http\Middleware\CorsMiddleware::class,
+    //App\Http\Middleware\CorsMiddleware::class,
 ]);
 
 /*

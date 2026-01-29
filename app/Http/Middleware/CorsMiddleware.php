@@ -8,8 +8,6 @@ class CorsMiddleware {
         $headers = [
             'Access-Control-Allow-Origin'      => '*',
             'Access-Control-Allow-Methods'     => 'POST, GET, OPTIONS, PUT, DELETE',
-            'Access-Control-Allow-Credentials' => 'true',
-            'Access-Control-Allow-Max-Age'     => '86400',
             'Access-Control-Allow-Headers'     => 'Content-Type, Authorization, X-Requested-With'
         ];
 
@@ -18,10 +16,11 @@ class CorsMiddleware {
         }
 
         $response = $next($request);
-        foreach ($headers as $key => $value) {
-            $response->header($key, $value);
+        if (method_exists($response, 'header')) {
+            foreach ($headers as $key => $value) {
+                $response->header($key, $value);
+            }
         }
-
         return $response;
     }
 }
