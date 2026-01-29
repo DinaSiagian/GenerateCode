@@ -9,6 +9,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->delete('/items/{id}', 'ItemController@destroy');
     $router->get('/items/detail/{kode_barang}', 'ItemController@showByCode');
 
-    // ENDPOINT UNTUK PROSES PINJAM (WAJIB ADA)
+    // ENDPOINT PEMINJAMAN (POST)
+    // {id} di sini nanti akan menangkap kode_barang yang dikirim frontend
     $router->post('/items/{id}/borrow', 'ItemController@borrow');
 });

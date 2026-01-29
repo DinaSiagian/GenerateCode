@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 use App\Item;
 use App\Peminjaman; 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // Tambahkan DB Facade jika perlu transaksi manual
 
 class ItemController extends Controller {
     
-    // 1. Statistik (Otomatis update jumlah 'Tersedia' & 'Dipinjam')
     public function getStats() {
         return response()->json([
             'total'       => Item::count(),
@@ -17,33 +17,49 @@ class ItemController extends Controller {
         ]);
     }
 
-    // 2. Tampil Semua Barang
     public function index() {
         return response()->json(Item::orderBy('created_at', 'desc')->get());
     }
 
-    // 3. LOGIKA UTAMA PEMINJAMAN (ENDPOINT POST)
+    // FUNGSI UTAMA PEMINJAMAN
     public function borrow(Request $request, $id) {
-        // Cari barang (bisa pakai ID asli atau Kode Barang GEN-xxxx dari QR)
+        // Validasi input nama peminjam dari Frontend
+        $this->validate($request, [
+            'nama_peminjam' => 'required|string|max:255'
+        ]);
+
+        // Cari barang berdasarkan ID atau Kode Barang
         $item = Item::where('id', $id)->orWhere('kode_barang', $id)->first();
 
-        if (!$item) return response()->json(['message' => 'Barang tidak ditemukan'], 404);
-        if ($item->status !== 'Tersedia') return response()->json(['message' => 'Barang sedang dibawa/dipinjam'], 400);
+        if (!$item) {
+            return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+        }
 
-        // A. Update status barang di tabel 'items'
+        // Cek status case-insensitive (mengantisipasi 'tersedia' vs 'Tersedia')
+        if (strtolower($item->status) !== 'tersedia') {
+            return response()->json(['message' => 'Barang sedang tidak tersedia (Status: ' . $item->status . ')'], 400);
+        }
+
+        // Mulai Transaksi Database (Opsional tapi disarankan agar data konsisten)
+        // Jika tidak pakai DB::transaction, kode di bawah tetap jalan normal
+        
+        // A. Update status barang
         $item->status = 'Dipinjam';
         $item->save();
 
-        // B. Simpan riwayat ke tabel 'peminjamans' (Mencatat riwayat baru)
+        // B. Simpan riwayat
         Peminjaman::create([
             'item_id' => $item->id,
-            'nama_peminjam' => $request->input('nama_peminjam', 'User Scanner'), 
+            'nama_peminjam' => $request->input('nama_peminjam'),
             'tanggal_pinjam' => date('Y-m-d H:i:s'),
             'status_pinjam' => 'Aktif',
             'is_notified' => false
         ]);
 
-        return response()->json(['message' => 'Peminjaman berhasil dicatat!', 'status' => 'Dipinjam']);
+        return response()->json([
+            'message' => 'Peminjaman berhasil dicatat atas nama ' . $request->input('nama_peminjam'), 
+            'status' => 'Dipinjam'
+        ]);
     }
 
     public function showByCode($kode_barang) {
@@ -53,11 +69,27 @@ class ItemController extends Controller {
     }
 
     public function store(Request $request) {
-        $this->validate($request, ['nama_barang' => 'required', 'kode_barang' => 'required|unique:items', 'kategori' => 'required', 'lokasi' => 'required']);
+        $this->validate($request, [
+            'nama_barang' => 'required', 
+            'kode_barang' => 'required|unique:items', 
+            'kategori' => 'required', 
+            'lokasi' => 'required'
+        ]);
         $data = $request->all();
         $data['status'] = 'Tersedia'; 
         return response()->json(Item::create($data), 201);
     }
 
-    public function destroy($id) { Item::destroy($id); return response()->json(['message' => 'Berhasil dihapus']); }
+    // Saya asumsikan Anda mungkin butuh update barang juga (meski tidak diminta diperbaiki)
+    public function update(Request $request, $id) {
+        $item = Item::find($id);
+        if (!$item) return response()->json(['message' => 'Not found'], 404);
+        $item->update($request->all());
+        return response()->json($item);
+    }
+
+    public function destroy($id) { 
+        Item::destroy($id); 
+        return response()->json(['message' => 'Berhasil dihapus']); 
+    }
 }

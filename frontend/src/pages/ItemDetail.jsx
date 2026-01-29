@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
+// import axios dihapus karena sudah pakai instance 'api'
 import { useParams } from "react-router-dom";
-import { Card, Badge, Spinner, Container, Button } from "react-bootstrap";
-import { MapPin, Tag, Package, Info, HandHelping } from "lucide-react"; // Perbaikan: HandHelping tanpa spasi
+import { Card, Badge, Spinner, Container, Button, Form } from "react-bootstrap"; // Tambah Form
+import { MapPin, Tag, HandHelping } from "lucide-react";
 import api from "../api";
 
 const ItemDetail = () => {
     const { kode_barang } = useParams();
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [borrowing, setBorrowing] = useState(false); // State untuk proses klik tombol
+    const [borrowing, setBorrowing] = useState(false);
+    const [namaPeminjam, setNamaPeminjam] = useState(""); // State baru untuk input nama
 
     const fetchDetail = async () => {
         try {
@@ -25,8 +27,13 @@ const ItemDetail = () => {
         fetchDetail();
     }, [kode_barang]);
 
-    // Fungsi untuk menangani peminjaman barang
     const handleBorrow = async () => {
+        // Validasi input nama
+        if (!namaPeminjam.trim()) {
+            alert("Harap masukkan nama peminjam terlebih dahulu!");
+            return;
+        }
+
         if (
             !window.confirm(
                 `Apakah Anda yakin ingin meminjam ${item.nama_barang}?`,
@@ -36,20 +43,18 @@ const ItemDetail = () => {
 
         setBorrowing(true);
         try {
-            // Mengirim permintaan ke backend untuk update status dan jumlah
-            // Pastikan backend Anda memiliki endpoint PUT /items/borrow/{kode_barang}
-            await api.put(`/items/borrow/${item.kode_barang}`);
+            // PERBAIKAN: Menggunakan POST dan mengirim data nama_peminjam
+            await api.post(`/items/${item.kode_barang}/borrow`, {
+                nama_peminjam: namaPeminjam,
+            });
 
-            alert(
-                "Berhasil meminjam barang! Status admin otomatis diperbarui.",
-            );
-
-            // Segarkan data untuk melihat perubahan status terbaru
-            fetchDetail();
+            alert("Berhasil meminjam barang!");
+            setNamaPeminjam(""); // Reset input nama
+            fetchDetail(); // Refresh data
         } catch (err) {
             alert(
                 err.response?.data?.message ||
-                    "Gagal melakukan peminjaman barang. Pastikan endpoint tersedia.",
+                    "Gagal melakukan peminjaman barang.",
             );
         } finally {
             setBorrowing(false);
@@ -94,9 +99,7 @@ const ItemDetail = () => {
                                 bg={
                                     item.status === "Tersedia"
                                         ? "success"
-                                        : item.status === "Dipinjam"
-                                          ? "primary"
-                                          : "warning"
+                                        : "warning"
                                 }
                                 className="px-3 py-2 rounded-pill"
                             >
@@ -128,9 +131,23 @@ const ItemDetail = () => {
                             </div>
                         </div>
 
-                        {/* Penambahan Tombol Pinjam: Hanya muncul jika statusnya "Tersedia" */}
+                        {/* Form Peminjaman: Hanya muncul jika Tersedia */}
                         {item.status === "Tersedia" && (
                             <div className="mt-4">
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="text-muted small">
+                                        Nama Peminjam
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Masukkan nama Anda..."
+                                        value={namaPeminjam}
+                                        onChange={(e) =>
+                                            setNamaPeminjam(e.target.value)
+                                        }
+                                    />
+                                </Form.Group>
+
                                 <Button
                                     variant="primary"
                                     className="w-100 py-3 rounded-3 fw-bold d-flex align-items-center justify-content-center"
@@ -139,7 +156,7 @@ const ItemDetail = () => {
                                 >
                                     {borrowing ? (
                                         <Spinner
-                                            animation="sm"
+                                            animation="border"
                                             size="sm"
                                             className="me-2"
                                         />
@@ -151,13 +168,6 @@ const ItemDetail = () => {
                                     )}
                                     PINJAM BARANG
                                 </Button>
-                                <p
-                                    className="text-center text-muted tiny mt-2"
-                                    style={{ fontSize: "0.75rem" }}
-                                >
-                                    *Peminjaman akan mengurangi jumlah tersedia
-                                    di database.
-                                </p>
                             </div>
                         )}
 
