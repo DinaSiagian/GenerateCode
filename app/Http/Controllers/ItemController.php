@@ -1,15 +1,16 @@
 <?php
 namespace App\Http\Controllers;
+
 use App\Item;
+use App\Peminjaman; 
 use Illuminate\Http\Request;
 
 class ItemController extends Controller {
-    // 1. Tampil Data (READ)
+    
     public function index() {
         return response()->json(Item::orderBy('created_at', 'desc')->get());
     }
 
-    // 2. Statistik Dashboard (SUDAH BERHASIL)
     public function getStats() {
         return response()->json([
             'total'       => Item::count(),
@@ -19,18 +20,24 @@ class ItemController extends Controller {
         ]);
     }
 
-    // 3. Tambah Barang (CREATE)
+    // 3. Tambah Barang (DIPERBAIKI)
     public function store(Request $request) {
         $this->validate($request, [
             'nama_barang' => 'required',
             'kode_barang' => 'required|unique:items',
             'kategori'    => 'required',
-            'status'      => 'required'
+            'lokasi'      => 'required', // Menyesuaikan input di dashboard
         ]);
-        return response()->json(Item::create($request->all()), 201);
+
+        // Default status adalah 'Tersedia' jika tidak dikirim dari frontend
+        $data = $request->all();
+        if (!isset($data['status'])) {
+            $data['status'] = 'Tersedia';
+        }
+
+        return response()->json(Item::create($data), 201);
     }
 
-    // 4. Update Status (UPDATE)
     public function update(Request $request, $id) {
         $item = Item::find($id);
         if (!$item) return response()->json(['message' => 'Data tidak ditemukan'], 404);
@@ -38,16 +45,35 @@ class ItemController extends Controller {
         return response()->json($item);
     }
 
-    // 5. Hapus Barang (DELETE)
+    // 5. Fitur Pinjam Barang (Hanya SATU fungsi saja agar tidak Error 500)
+    public function borrow(Request $request, $id) {
+        $item = Item::find($id);
+
+        if (!$item) return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+        if ($item->status !== 'Tersedia') return response()->json(['message' => 'Barang sedang tidak tersedia'], 400);
+
+        $item->status = 'Dipinjam';
+        $item->save();
+
+        Peminjaman::create([
+            'item_id' => $item->id,
+            'nama_peminjam' => $request->input('nama_peminjam', 'User Scanner'), 
+            'tanggal_pinjam' => date('Y-m-d H:i:s'),
+            'status_pinjam' => 'Aktif',
+            'is_notified' => false
+        ]);
+
+        return response()->json(['message' => 'Peminjaman berhasil dicatat!']);
+    }
+
+    public function showByCode($kode_barang) {
+        $item = Item::where('kode_barang', $kode_barang)->first();
+        if (!$item) return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+        return response()->json($item);
+    }
+
     public function destroy($id) {
         Item::destroy($id);
         return response()->json(['message' => 'Berhasil dihapus']);
     }
-
-    // Mencari detail barang berdasarkan kode_barang untuk fitur scan
-public function showByCode($kode_barang) {
-    $item = Item::where('kode_barang', $kode_barang)->first();
-    if (!$item) return response()->json(['message' => 'Barang tidak ditemukan'], 404);
-    return response()->json($item);
-}
 }
