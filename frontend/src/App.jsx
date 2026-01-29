@@ -1,121 +1,53 @@
-import React from "react";
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
-    Link,
-    useLocation,
-} from "react-router-dom";
-import { LayoutDashboard, Box, PlusCircle, LogOut } from "lucide-react";
-
-// Import Halaman
-import Dashboard from "./pages/Dashboard";
-import Inventory from "./pages/Inventory";
-import AddItem from "./pages/AddItem";
-import ItemDetail from "./pages/ItemDetail";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import Inventory from './pages/Inventory';
+import AddItem from './pages/AddItem';
+import ItemDetail from './pages/ItemDetail';
 
 const Sidebar = () => {
-    const location = useLocation();
-
-    // LOGIKA BARU: Jika path dimulai dengan "/item/", jangan tampilkan Sidebar
-    if (location.pathname.startsWith("/item/")) {
-        return null;
-    }
-
-    const menuItems = [
-        { path: "/", name: "Dashboard", icon: <LayoutDashboard size={20} /> },
-        { path: "/inventory", name: "Inventaris", icon: <Box size={20} /> },
-        {
-            path: "/tambah",
-            name: "Tambah Barang",
-            icon: <PlusCircle size={20} />,
-        },
-    ];
-
-    return (
-        <div
-            className="sidebar bg-dark text-white vh-100 p-3 shadow"
-            style={{ width: "260px", position: "fixed" }}
-        >
-            <h4 className="fw-bold text-primary mb-5 px-2">GENCODE ADMIN</h4>
-            <nav className="nav flex-column gap-2">
-                {menuItems.map((item) => (
-                    <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`nav-link d-flex align-items-center gap-3 rounded px-3 py-2 transition-all ${
-                            location.pathname === item.path
-                                ? "bg-primary text-white shadow"
-                                : "text-light opacity-75 hover-opacity-100"
-                        }`}
-                        style={{ textDecoration: "none" }}
-                    >
-                        {item.icon}
-                        <span>{item.name}</span>
-                    </Link>
-                ))}
-            </nav>
-            <div
-                className="mt-auto pt-5 border-top border-secondary mx-2"
-                style={{ position: "absolute", bottom: "20px", width: "220px" }}
-            >
-                <Link
-                    to="/logout"
-                    className="nav-link text-danger d-flex align-items-center gap-3"
-                >
-                    <LogOut size={20} />
-                    <span>Keluar</span>
-                </Link>
-            </div>
-        </div>
-    );
+  const location = useLocation();
+  return (
+    <div className="vh-100 p-3 shadow" style={{ width: '280px', position: 'fixed', background: '#1a365d', color: 'white' }}>
+      <h4 className="fw-bold mb-5 text-center">GENCODE ADMIN</h4>
+      <nav className="nav flex-column gap-2">
+        <Link to="/" className={`nav-link rounded ${location.pathname === '/' ? 'bg-primary text-white shadow' : 'text-white-50'}`}>Dashboard</Link>
+        <Link to="/inventory" className={`nav-link rounded ${location.pathname === '/inventory' ? 'bg-primary text-white shadow' : 'text-white-50'}`}>Inventaris Aset</Link>
+        <Link to="/tambah" className={`nav-link rounded ${location.pathname === '/tambah' ? 'bg-primary text-white shadow' : 'text-white-50'}`}>Registrasi Baru</Link>
+      </nav>
+    </div>
+  );
 };
 
-// Komponen Pembungkus Konten untuk mengatur margin otomatis
-const MainLayout = ({ children }) => {
-    const location = useLocation();
-    // Jika halaman detail barang, jangan beri margin kiri (karena sidebar hilang)
-    const isPublic = location.pathname.startsWith("/item/");
+const LayoutWrapper = () => {
+  const location = useLocation();
+  const isPublic = location.pathname.includes('/item/') || location.pathname.includes('/scan/');
 
+  if (isPublic) {
     return (
-        <div
-            className="flex-grow-1"
-            style={{ marginLeft: isPublic ? "0" : "260px" }}
-        >
-            {!isPublic && (
-                <header className="bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center shadow-sm">
-                    <span className="text-muted fw-medium">
-                        Super Admin Dashboard
-                    </span>
-                    <div className="rounded-circle bg-light p-2 shadow-sm">
-                        🔔
-                    </div>
-                </header>
-            )}
-            <main className={isPublic ? "p-0" : "p-4"}>{children}</main>
-        </div>
+      <div className="w-100 min-vh-100" style={{ background: '#007bff' }}>
+        <Routes>
+          <Route path="/item/:kode_barang" element={<ItemDetail />} />
+          <Route path="/scan/:kode_barang" element={<ItemDetail />} />
+        </Routes>
+      </div>
     );
+  }
+
+  return (
+    <div className="d-flex">
+      <Sidebar />
+      <div className="flex-grow-1" style={{ marginLeft: '280px', padding: '20px' }}>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/tambah" element={<AddItem />} />
+        </Routes>
+      </div>
+    </div>
+  );
 };
 
-function App() {
-    return (
-        <Router>
-            <div className="d-flex bg-light min-vh-100">
-                <Sidebar />
-                <MainLayout>
-                    <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/inventory" element={<Inventory />} />
-                        <Route path="/tambah" element={<AddItem />} />
-                        <Route
-                            path="/item/:kode_barang"
-                            element={<ItemDetail />}
-                        />
-                    </Routes>
-                </MainLayout>
-            </div>
-        </Router>
-    );
+export default function App() {
+  return <Router><LayoutWrapper /></Router>;
 }
-
-export default App;

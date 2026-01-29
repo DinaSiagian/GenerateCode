@@ -6,11 +6,11 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
+// Group API routes
 $router->group(['prefix' => 'api'], function () use ($router) {
-    $router->get('/items', 'ItemController@index');
     $router->get('/dashboard-stats', 'ItemController@getStats');
+    $router->get('/items', 'ItemController@index');
     $router->post('/items', 'ItemController@store');
-    $router->put('/items/{id}', 'ItemController@update');
-    $router->delete('/items/{id}', 'ItemController@destroy');
-    $router->get('/items/detail/{kode_barang}', 'ItemController@showByCode');
+    $router->get('/items/scan/{kode_barang}', 'ItemController@showByCode');
+    $router->put('/items/borrow/{kode_barang}', 'ItemController@borrow'); // Endpoint untuk update status
 });
